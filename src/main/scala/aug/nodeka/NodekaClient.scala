@@ -12,6 +12,7 @@ trait Initable {
 
 object Util {
   def removeColors(string: String): String = string.replaceAll("\u001B\\[.*?m", "")
+  def removeEscape(string: String): String = string.replaceAll("\u001B", "")
 }
 
 object Capture extends Initable {
@@ -82,6 +83,8 @@ class NodekaClient extends ClientInterface {
   }
 
   override def init(profileInterface: ProfileInterface, reloadData: ReloadData): Unit = {
+    val ms = System.currentTimeMillis()
+
     Profile.profile = profileInterface
     profile = profileInterface
     com = profile.createTextWindow("com")
@@ -103,17 +106,23 @@ class NodekaClient extends ClientInterface {
 
     Array(Capture, Trigger, Alias, Player, Spells, Prevs).foreach(_.init(this))
 
-    metric.echo(s"loaded $clientDir")
+    metric.echo(s"script loaded in ${System.currentTimeMillis() - ms}")
   }
 
   override def onConnect(): Unit = {}
 
   override def handleLine(lineNum: Long, line: String): Boolean = {
     val withoutColors = Util.removeColors(line)
+    // line always starts with 1;37m it seems
+//    if (line.contains("[1;36m")) {
+//      com.echo(Util.removeEscape(line))
+//    }
     lineHandlers.view.map(_(line, withoutColors)).find(_._1).exists(_._2)
   }
 
-  override def handleFragment(fragment: String): Unit = Trigger.handleFragment(fragment)
+  override def handleFragment(fragment: String): Unit = {
+    Trigger.handleFragment(Util.removeColors(fragment))
+  }
 
   override def onDisconnect(): Unit = {}
 

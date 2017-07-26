@@ -11,7 +11,7 @@ case class BaseChar(
                      keepNd: Int = 100
                    ) {
   def spellup() : Unit = {
-    spells.filter(!Spells.isActive(_)).foreach(Spells.cast(_))
+    spells.filter(!Spells.isActive(_)).foreach(Spells.cast)
   }
   def onRound() : Unit = {}
 }
@@ -71,16 +71,26 @@ object Player extends Initable {
 
   var char : BaseChar = DefaultChar
 
+  def onPrompt = {
+
+  }
+
   override def init(client: NodekaClient): Unit = {
     char = chars(name) // might have been reloaded
 
-    Trigger.addFrag("^-->> ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*)", (m: MatchResult) => {
+    Trigger.addFrag("^-->> ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*)$", (m: MatchResult) => {
       hp = m.group(1).toInt
       sp = m.group(2).toInt
       mn = m.group(3).toInt
       nd = m.group(4).toInt
       gold = m.group(5).toInt
       lag = m.group(6).toInt
+
+      onPrompt
+    })
+
+    Alias.add("^info$", {
+      client.metric.echo(s"name: $name, hp: $hp, mn: $mn, sp: $sp, nd: $nd, gold: $gold, xp: $xp, lag: $lag, level: $level")
     })
   }
 }
