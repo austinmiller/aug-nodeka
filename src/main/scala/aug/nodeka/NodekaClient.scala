@@ -1,6 +1,7 @@
 package aug.nodeka
 
 import java.io.File
+import java.util
 import java.util.regex.Pattern
 
 import aug.script.shared._
@@ -41,9 +42,25 @@ object Capture extends Initable {
   }
 }
 
+object Profile extends ProfileInterface {
+  var profile: ProfileInterface = null
+
+  override def getConfigDir: File = profile.getConfigDir
+  override def setWindowGraph(windowReference: WindowReference): Boolean = profile.setWindowGraph(windowReference)
+  override def getTextWindow(s: String): TextWindowInterface = profile.getTextWindow(s)
+  override def sendSilently(s: String): Unit = profile.sendSilently(s)
+  override def createTextWindow(s: String): TextWindowInterface = profile.createTextWindow(s)
+  override def getWindowNames: util.List[String] = profile.getWindowNames
+  override def send(s: String): Unit = profile.send(s)
+}
+
 class NodekaClient extends ClientInterface {
 
+  val reloaders = List(Player, Spells, Prevs)
+
   Player.client = this
+  Reloader.client = this
+
   var profile: ProfileInterface = null
   var com: TextWindowInterface = null
   var metric: TextWindowInterface = null
@@ -58,9 +75,14 @@ class NodekaClient extends ClientInterface {
     Trigger.handle
   )
 
-  override def shutdown(): Unit = {}
+  override def shutdown(): ReloadData = {
+    val rl = new ReloadData
+    Reloader.save(rl, reloaders)
+    rl
+  }
 
-  override def init(profileInterface: ProfileInterface): Unit = {
+  override def init(profileInterface: ProfileInterface, reloadData: ReloadData): Unit = {
+    Profile.profile = profileInterface
     profile = profileInterface
     com = profile.createTextWindow("com")
     metric = profile.createTextWindow("metric")
@@ -77,7 +99,9 @@ class NodekaClient extends ClientInterface {
 
     profile.setWindowGraph(graph)
 
-    Array(Capture, Trigger, Alias, Player, Spells).foreach(_.init(this))
+    Reloader.load(reloadData, reloaders)
+
+    Array(Capture, Trigger, Alias, Player, Spells, Prevs).foreach(_.init(this))
 
     metric.echo(s"loaded $clientDir")
   }

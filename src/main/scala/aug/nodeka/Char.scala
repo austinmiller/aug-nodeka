@@ -44,32 +44,36 @@ object JibaChar extends BaseChar(
     "elemental malediction",
     "oblique pattern"
   ), 1000, 1000, 150) {
+
   import Player._
+
   override def spellup(): Unit = {
     super.spellup()
     if (sp > 400 && nd < 250) Spells.cast("greater invigoration")
-
   }
 }
 
 object DefaultChar extends BaseChar("default")
 
 object Player extends Initable {
-
   private val chars = List(DefaultChar, JibaChar).map(c=>c.name -> c).toMap
 
   var client : NodekaClient = null
-  var mn = 0
-  var hp = 0
-  var sp = 0
-  var nd = 0
-  var gold = 0
-  var xp = 0
-  var lag = 0
+  @Reload var mn = 0
+  @Reload var hp = 0
+  @Reload var sp = 0
+  @Reload var nd = 0
+  @Reload var gold = 0
+  @Reload var xp = 0
+  @Reload var lag = 0
+  @Reload var level = 0
+  @Reload var name = "jiba"
 
   var char : BaseChar = DefaultChar
 
   override def init(client: NodekaClient): Unit = {
+    char = chars(name) // might have been reloaded
+
     Trigger.addFrag("^-->> ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*)", (m: MatchResult) => {
       hp = m.group(1).toInt
       sp = m.group(2).toInt
