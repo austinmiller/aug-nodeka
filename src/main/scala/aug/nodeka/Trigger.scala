@@ -38,6 +38,12 @@ object Trigger extends Initable {
     fragmentTriggers.view.map(_.execute(fragment)).find(_._1).getOrElse((false, false))
   }
 
+  def remove(trigger: Trigger) = {
+    triggers -= trigger
+    colorTriggers -= trigger
+    fragmentTriggers -= trigger
+  }
+
   def add[T](regex: String, f: => T): Trigger = {
     val t = Trigger(regex, (m: MatchResult, s: String) => f)
     triggers += t
@@ -56,6 +62,23 @@ object Trigger extends Initable {
     t
   }
 
+  def addColor[T](regex: String, f: => T): Trigger = {
+    val t = Trigger(regex, (m: MatchResult, s: String) => f)
+    colorTriggers += t
+    t
+  }
+
+  def addColor[T](regex: String, f: (MatchResult) => T): Trigger = {
+    val t = Trigger(regex, (m: MatchResult, s: String) => f(m))
+    colorTriggers += t
+    t
+  }
+
+  def addColor[T](regex: String, f: (MatchResult, String) => T): Trigger = {
+    val t = Trigger(regex, (m: MatchResult, s: String) => f(m, s))
+    colorTriggers += t
+    t
+  }
 
   def addFrag[T](regex: String, f: => T): Trigger = {
     val t = Trigger(regex, (m: MatchResult, s: String) => f)

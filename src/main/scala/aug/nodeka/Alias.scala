@@ -3,6 +3,7 @@ package aug.nodeka
 import java.util.regex.{MatchResult, Pattern}
 
 import scala.collection.mutable.ListBuffer
+import scala.util.{Failure, Try}
 
 case class Alias(regex: String, function: (MatchResult, String) => Unit) {
   private val pattern = Pattern.compile(regex)
@@ -12,7 +13,14 @@ case class Alias(regex: String, function: (MatchResult, String) => Unit) {
   def execute(cmd: String) : Boolean = {
     val matcher = pattern.matcher(cmd)
     if(matcher.matches()) {
-      function(matcher.toMatchResult, cmd)
+      Try {
+        function(matcher.toMatchResult, cmd)
+      } match {
+        case Failure(e) =>
+          Profile.error(s"error executing alias $regex, exception ${e.getMessage}")
+          e.printStackTrace()
+        case _ =>
+      }
       true
     } else false
   }
@@ -26,8 +34,15 @@ object Alias extends Initable {
     aliases += a
     a
   }
-  def add(regex: String, f: (String) => Unit) : Alias = {
-    val a = Alias(regex, (m: MatchResult, s: String) => f(s))
+
+  def add[T](regex: String, f: (MatchResult) => T) : Alias = {
+    val a = Alias(regex, (m: MatchResult, s: String) => f(m))
+    aliases += a
+    a
+  }
+
+  def add[T](regex: String, f: (MatchResult, String) => T) : Alias = {
+    val a = Alias(regex, (m: MatchResult, s: String) => f(m, s))
     aliases += a
     a
   }
@@ -35,6 +50,6 @@ object Alias extends Initable {
   def handle(cmd: String) = aliases.exists(_.execute(cmd))
 
   override def init(client: NodekaClient): Unit = {
-    add("^alias count$", client.metric.echo(s"There are ${aliases.size} aliases."))
+    add("^alias count$", Profile.info(s"There are ${aliases.size} aliases."))
   }
 }

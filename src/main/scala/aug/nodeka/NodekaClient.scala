@@ -10,41 +10,10 @@ trait Initable {
   def init(client: NodekaClient) : Unit
 }
 
-object Util {
-  def removeColors(string: String): String = string.replaceAll("\u001B\\[.*?m", "")
-  def removeEscape(string: String): String = string.replaceAll("\u001B", "")
-}
-
-object Capture extends Initable {
-  val patterns: List[Pattern] = List(
-    "^\\[ .* \\]: '.*'$",
-    "^.* tells you, '.*'$",
-    "^You tell .*, '.*'$",
-    "^##.*",
-    "^\\[\\*\\] .* (flame|flames) \\[\\*\\] '.*'$",
-    "^.* says, '.*'$",
-    "^< emote > .*$",
-    "^< social > .*$",
-    "^\\[ >>> .* <<<\\]$"
-  ).map(Pattern.compile)
-
-  private var com : TextWindowInterface = null
-
-  def handle(line: String, withoutColors: String) : (Boolean, Boolean) = {
-
-    if (patterns.exists(_.matcher(withoutColors).matches())) {
-      com.echo(line)
-      (true, false)
-    } else (false, false)
-  }
-
-  override def init(client: NodekaClient): Unit = {
-    com = client.com
-  }
-}
-
 object Profile extends ProfileInterface {
   var profile: ProfileInterface = null
+  var com: TextWindowInterface = null
+  var metric: TextWindowInterface = null
 
   override def getConfigDir: File = profile.getConfigDir
   override def setWindowGraph(windowReference: WindowReference): Boolean = profile.setWindowGraph(windowReference)
@@ -53,18 +22,19 @@ object Profile extends ProfileInterface {
   override def createTextWindow(s: String): TextWindowInterface = profile.createTextWindow(s)
   override def getWindowNames: util.List[String] = profile.getWindowNames
   override def send(s: String): Unit = profile.send(s)
+
+  def execute(s: String): Unit = s.split("\\|").foreach(profile.send)
+
+  def info(s: String): Unit = metric.echo(s"INFO: $s")
+  def error(s: String): Unit = metric.echo(s"ERROR: $s")
 }
 
 class NodekaClient extends ClientInterface {
 
-  val reloaders = List(Player, Spells, Prevs)
+  val classes = List(Trigger, Alias, Player, Spells, Prevs, Run, MobTracker)
 
   Player.client = this
-  Reloader.client = this
 
-  var profile: ProfileInterface = null
-  var com: TextWindowInterface = null
-  var metric: TextWindowInterface = null
   val prompt = new PromptCapture(this)
   var clientDir : File = null
 
@@ -78,7 +48,7 @@ class NodekaClient extends ClientInterface {
 
   override def shutdown(): ReloadData = {
     val rl = new ReloadData
-    Reloader.save(rl, reloaders)
+    Reloader.save(rl, classes)
     rl
   }
 
@@ -86,10 +56,10 @@ class NodekaClient extends ClientInterface {
     val ms = System.currentTimeMillis()
 
     Profile.profile = profileInterface
-    profile = profileInterface
-    com = profile.createTextWindow("com")
-    metric = profile.createTextWindow("metric")
-    clientDir = profile.getConfigDir
+    Profile.com = Profile.createTextWindow("com")
+    Profile.metric = Profile.createTextWindow("metric")
+
+    clientDir = Profile.getConfigDir
 
     val graph = new SplitWindow(
       new WindowReference("console"),
@@ -100,23 +70,22 @@ class NodekaClient extends ClientInterface {
       ),
       true)
 
-    profile.setWindowGraph(graph)
+    Profile.setWindowGraph(graph)
 
-    Reloader.load(reloadData, reloaders)
+    Reloader.load(reloadData, classes)
 
-    Array(Capture, Trigger, Alias, Player, Spells, Prevs).foreach(_.init(this))
+    classes.foreach(_.init(this))
 
-    metric.echo(s"script loaded in ${System.currentTimeMillis() - ms}")
+    val matches = "!!!!!".matches("\\Q!\\E+")
+    Profile.info(s"$matches ${Pattern.quote("!")}")
+
+    Profile.info(s"script loaded in ${System.currentTimeMillis() - ms}")
   }
 
   override def onConnect(): Unit = {}
 
   override def handleLine(lineNum: Long, line: String): Boolean = {
     val withoutColors = Util.removeColors(line)
-    // line always starts with 1;37m it seems
-//    if (line.contains("[1;36m")) {
-//      com.echo(Util.removeEscape(line))
-//    }
     lineHandlers.view.map(_(line, withoutColors)).find(_._1).exists(_._2)
   }
 

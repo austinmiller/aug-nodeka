@@ -16,6 +16,8 @@ case class Spell(name: String, mn: Int, sp: Int, nd: Int, prev: String) {
       }
     }
   }
+
+  def able : Boolean = prev == "" || !Prevs.isActive(prev)
 }
 
 object Spells extends Initable {
@@ -72,27 +74,27 @@ object Spells extends Initable {
   def apply(name: String) = spells(name)
 
   override def init(client: NodekaClient): Unit = {
-    Alias.add("^active spells$", client.metric.echo(s"active spells: ${active}"))
+    Alias.add("^active spells$", Profile.metric.echo(s"active spells: ${active}"))
 
     Trigger.add("^the ataghan of Jiba you carry withers into dust\\.$", {
-      client.profile.send("wear cogline, left wield")
+      Profile.send("wear cogline, left wield")
       off("ataghan of inheritance")
     })
 
     Trigger.add("^Jiba's claymore of Lorhu you carry withers into dust\\.$", {
-      client.profile.send("wear cogline, right wield")
+      Profile.send("wear cogline, right wield")
       off("lorhu's claymore")
     })
 
     Trigger.add("^The ataghan is yours\\.$", {
-      client.profile.send("remove all, left wield")
-      client.profile.send("wear ataghan, left wield")
+      Profile.send("remove all, left wield")
+      Profile.send("wear ataghan, left wield")
       on("ataghan of inheritance")
     })
 
     Trigger.add("^Lorhu's claymore finds its way to you\\.$", {
-      client.profile.send("remove all, right wield")
-      client.profile.send("wear lorhu, right wield")
+      Profile.send("remove all, right wield")
+      Profile.send("wear lorhu, right wield")
       on("lorhu's claymore")
     })
 
@@ -144,6 +146,7 @@ object Spells extends Initable {
 }
 
 object Prevs extends Initable {
+  import Util._
 
   @Reload
   private val active = mutable.Set[String]()
@@ -154,39 +157,39 @@ object Prevs extends Initable {
   def clear(): Unit = active.clear
 
   override def init(client: NodekaClient): Unit = {
-    Alias.add("^active prevs$", client.metric.echo(s"active prevs: ${active}"))
+    Alias.add("^active prevs$", Profile.metric.echo(s"active prevs: ${active}"))
     Alias.add("^clear prevs$", {
       active.clear
-      client.metric.echo(s"prevs cleared")
+      Profile.metric.echo(s"prevs cleared")
     })
 
     Trigger.add("^You may again perform (.*) abilities\\.$", (m: MatchResult) => off(m.group(1)))
     Trigger.add("^You cannot perform (.*) abilities again yet \\(type 'prevention'\\)\\.$", (m: MatchResult) => on(m.group(1)))
 
-    Trigger.add("^You decay (a|an) .* mind, (\\(resisted\\) |)(he|she|it) screams in pain as you .* (her|him|it)(\\.|\\!+)$", on("mental attack - basic level"))
-    Trigger.add("^You break your concentration of mental attack and miss (a|an) .* with its blast\\!$", on("mental attack - basic level"))
-    Trigger.add("^You try to bash (a|an) .* but mistime your thrust\\!$", on("impairment - iah"))
-    Trigger.add("^Partially resisted, you still manage to knock (a|an) .* off balance with your forced BASH\\!$", on("impairment - iah"))
-    Trigger.add("^You drive (a|an) .* off balance with a forced BASH\\!$", on("impairment - iah"))
-    Trigger.add("^With a tempest, you .* (a|an) .* with your mental warfare(\\!+|\\.)$", on("mental attack - intermediate level"))
-    Trigger.add("^With an unfocused tempest, you .* (a|an) .* with your mental warfare(\\!+|\\.)$", on("mental attack - intermediate level"))
-    Trigger.add("^Your mental tempest misses (a|an) .*\\!$", on("mental attack - intermediate level"))
-    Trigger.add("^A black arrow discharges from your (mystical|decrepit) hands .* (a|an) .*(\\!+|\\.)$", on("magic arrow - basic level"))
-    Trigger.add("^A black arrow, imperfectly aimed, discharges from your (mystical|decrepit) hands .* (a|an) .*(\\!+|\\.)$", on("magic arrow - basic level"))
-    Trigger.add("^Your arrow flies astray missing (a|an) .* ... nice shot archer man\\!$", on("magic arrow - basic level"))
-    Trigger.add("^Your green fire-star .* (a|an) .*(\\!+|\\.)$", on("fire generation - basic skill"))
+    Trigger.add("^You decay (a|an) .* mind, (\\(resisted\\) |)(he|she|it) screams in pain as you .* (her|him|it)(\\.|\\Q!\\E+)$", on("mental attack - basic level"))
+    Trigger.add("^You break your concentration of mental attack and miss (a|an) .* with its blast\\Q!\\E$", on("mental attack - basic level"))
+    Trigger.add("^You try to bash (a|an) .* but mistime your thrust\\Q!\\E$", on("impairment - iah"))
+    Trigger.add("^Partially resisted, you still manage to knock (a|an) .* off balance with your forced BASH\\Q!\\E$", on("impairment - iah"))
+    Trigger.add("^You drive (a|an) .* off balance with a forced BASH\\Q!\\E$", on("impairment - iah"))
+    Trigger.add("^With a tempest, you .* (a|an) .* with your mental warfare(\\Q!\\E+|\\.)$", on("mental attack - intermediate level"))
+    Trigger.add("^With an unfocused tempest, you .* (a|an) .* with your mental warfare(\\Q!\\E+|\\.)$", on("mental attack - intermediate level"))
+    Trigger.add("^Your mental tempest misses (a|an) .*\\Q!\\E$", on("mental attack - intermediate level"))
+    Trigger.add("^A black arrow discharges from your (mystical|decrepit) hands .* (a|an) .*(\\Q!\\E+|\\.)$", on("magic arrow - basic level"))
+    Trigger.add("^A black arrow, imperfectly aimed, discharges from your (mystical|decrepit) hands .* (a|an) .*(\\Q!\\E+|\\.)$", on("magic arrow - basic level"))
+    Trigger.add("^Your arrow flies astray missing (a|an) .* ... nice shot archer man\\Q!\\E$", on("magic arrow - basic level"))
+    Trigger.add("^Your green fire-star .* (a|an) .*(\\Q!\\E+|\\.)$", on("fire generation - basic skill"))
     Trigger.add("^You have run out of premonitions \\(see 'preventions' for more details\\)\\.$", on("clairvoyance"))
-    Trigger.add("^Your striking fist .* (a|an) .*(\\.|\\!+)$", on("hand form - basic skill"))
-    Trigger.add("^Your kick (.*) (a|an) .*(\\.|\\!+)$", on("kick - basic skill level"))
-    Trigger.add("^Your kick TRIPS (a|an) .* which sets (him|her|it) off balance(\\.|\\!+)$", on("trip - basic skill level"))
-    Trigger.add("^Your glancing strike .* (a|an) .*(\\.|\\!+)$", on("adroit combat feat - basic skill"))
+    Trigger.add("^Your striking fist .* (a|an) .*(\\.|\\Q!\\E+)$", on("hand form - basic skill"))
+    Trigger.add("^Your kick (.*) (a|an) .*(\\.|\\Q!\\E+)$", on("kick - basic skill level"))
+    Trigger.add("^Your kick TRIPS (a|an) .* which sets (him|her|it) off balance(\\.|\\Q!\\E+)$", on("trip - basic skill level"))
+    Trigger.add("^Your glancing strike .* (a|an) .*(\\.|\\Q!\\E+)$", on("adroit combat feat - basic skill"))
     Trigger.add("^You have run out of basic hums \\(see 'preventions' for more details\\)\\.$", on("basic hum"))
-    Trigger.add("^Your unholy scathing .* (a|an) .*(\\.|\\!+)$", on("mystical pattern - basic skill"))
-    Trigger.add("Your arc-bolt of quickness .* (a|an) .*(\\.|\\!+)$", on("mystical pattern - basic skill"))
+    Trigger.add("^Your unholy scathing .* (a|an) .*(\\.|\\Q!\\E+)$", on("mystical pattern - basic skill"))
+    Trigger.add("Your arc-bolt of quickness .* (a|an) .*(\\.|\\Q!\\E+)$", on("mystical pattern - basic skill"))
     Trigger.add("^You formulate a plan - only losers feel pain\\.$", on("aura - kyf naj'k"))
-    Trigger.add("^Your charging smite .* (a|an) .*(\\.|\\!+)$", on("combat initiative - basic skill"))
-    Trigger.add("^You .* (a|an) .* with your open-palmed strike(\\!+|\\.)$", on("hand form - advanced skill"))
-    Trigger.add("^Your mystical oblique energy .* (a|an) .*(\\.|\\!+)$", on("mystical pattern - intermediate skill"))
+    Trigger.add("^Your charging smite .* (a|an) .*(\\.|\\Q!\\E+)$", on("combat initiative - basic skill"))
+    Trigger.add("^You .* (a|an) .* with your open-palmed strike(\\Q!\\E+|\\.)$", on("hand form - advanced skill"))
+    Trigger.add("^Your mystical oblique energy .* (a|an) .*(\\.|\\Q!\\E+)$", on("mystical pattern - intermediate skill"))
     Trigger.add("^The ataghan is yours\\.$", on("item creation - basic level"))
     Trigger.add("^You can wrinkle time no more \\(see 'preventions' for more details\\)\\.$", on("the warlock wrinkle"))
   }
