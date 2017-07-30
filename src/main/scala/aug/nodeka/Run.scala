@@ -155,7 +155,7 @@ object Run extends Initable {
     loadMobTriggers(area)
 
     Profile.info(s"running $areaName with path $pathName")
-    Profile.send("look\n")
+    Profile.send("look")
   }
 
   def addTarget(target: String, count: Int = 1) = {
@@ -168,6 +168,12 @@ object Run extends Initable {
     areas.get(area).foreach(loadMobTriggers)
 
     Trigger.add("^They aren't here\\.$", {
+      if (state == Running) {
+        next
+      }
+    })
+
+    Trigger.add("^There is no one here by that name\\.$", {
       if (state == Running) {
         next
       }

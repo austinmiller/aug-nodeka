@@ -6,6 +6,7 @@ import scala.collection.mutable
 
 case class Spell(name: String, mn: Int, sp: Int, nd: Int, prev: String) {
   def cast(target: String = "") : Unit = {
+    Profile.trace(s"casting $name")
     if (prev == "" || !Prevs.isActive("prevs")) {
       if (mn > 0 && Player.mn > mn + 100) {
         Profile.send(s"cast '$name' $target")
@@ -32,8 +33,9 @@ object Spells extends Initable {
     Spell("demonic affirmation", 157, 303, 0, ""),
     Spell("elemental malediction", 300, 300, 0, ""),
     Spell("flight", 50, 100, 0, ""),
-    Spell("greater invigoration", 100, 0, 0, ""),
+    Spell("greater invigoration", 0, 100, 0, ""),
     Spell("haste", 50, 100, 0, ""),
+    Spell("kick", 0, 0, 7, "kick - basic skill level"),
     Spell("keiiken", 0, 0, 57, "hand form - advanced skill"),
     Spell("koloq", 238, 587, 0, "aura - oe grei"),
     Spell("lorhu's claymore", 0, 682, 0, "item creation - intermediate level"),
@@ -44,6 +46,7 @@ object Spells extends Initable {
     Spell("minor reign of strength", 100, 200, 0, ""),
     Spell("nefarious shift", 50, 100, 0, ""),
     Spell("oblique pattern", 0, 0, 123, "mystical pattern - intermediate skill"),
+    Spell("radical defiance", 0, 0, 207, ""),
     Spell("reign of resistance", 197, 388, 0, ""),
     Spell("reign of speed", 177, 372, 0, ""),
     Spell("reign of spirit", 511, 511, 0, "spirit power, basic"),
@@ -52,9 +55,11 @@ object Spells extends Initable {
     Spell("shadow cast", 40, 40, 0, ""),
     Spell("star of the green flame", 54, 101, 0, "fire generation - basic skill"),
     Spell("striking fist", 0, 0, 31, "hand form - basic skill"),
+    Spell("trip", 0, 0, 20, "trip - basic skill level"),
     Spell("valkyrie's agility", 0, 0, 100, ""),
     Spell("vehemence", 0, 0, 72, ""),
-    Spell("winged arc-bolt", 125, 233, 0, "mystical pattern - basic skill")
+    Spell("winged arc-bolt", 125, 233, 0, "mystical pattern - basic skill"),
+    Spell("yikwon hand form", 0, 0, 150, "hand form - intermediate skill")
   ).map(s => s.name -> s).toMap
 
   @Reload
@@ -70,8 +75,7 @@ object Spells extends Initable {
   }
   def off(name: String) : Unit = active.remove(name)
 
-
-  def apply(name: String) = spells(name)
+  def apply(name: String) = spells.get(name)
 
   override def init(client: NodekaClient): Unit = {
     Alias.add("^active spells$", Profile.metric.echo(s"active spells: ${active}"))
@@ -138,6 +142,8 @@ object Spells extends Initable {
     Trigger.add("^You already possess the reigns of the mighty\\.$", on("reign of strength"))
     Trigger.add("^You will time to bend, wind-runner\\.$", on("koloq"))
     Trigger.add("^The reigns of angelic spiritual strength are yours\\.$", on("reign of spirit"))
+    Trigger.add("^You begin to radically defy time\\.$", on("radical defiance"))
+    Trigger.add("^Time defial is already within you\\.$", on("radical defiance"))
 
     Trigger.add("^You are no longer affected by: (.*)\\.$", (m: MatchResult) => {
       off(m.group(1))
@@ -161,6 +167,15 @@ object Prevs extends Initable {
     Alias.add("^clear prevs$", {
       active.clear
       Profile.metric.echo(s"prevs cleared")
+    })
+    Alias.add("^spell able (.*)$", (m: MatchResult) => {
+      val name = m.group(1).trim
+      val sp = Spells(name)
+      if (sp.isEmpty) {
+        Profile.info(s"Did not find spell $name")
+      } else {
+        Profile.info(s"$sp.able == ${sp.get.able}")
+      }
     })
 
     Trigger.add("^You may again perform (.*) abilities\\.$", (m: MatchResult) => off(m.group(1)))
@@ -192,5 +207,6 @@ object Prevs extends Initable {
     Trigger.add("^Your mystical oblique energy .* (a|an) .*(\\.|\\Q!\\E+)$", on("mystical pattern - intermediate skill"))
     Trigger.add("^The ataghan is yours\\.$", on("item creation - basic level"))
     Trigger.add("^You can wrinkle time no more \\(see 'preventions' for more details\\)\\.$", on("the warlock wrinkle"))
+    Trigger.add("^Your backfist .* (a|an) .*(\\.|\\Q!\\E+)$", on("hand form - intermediate skill"))
   }
 }

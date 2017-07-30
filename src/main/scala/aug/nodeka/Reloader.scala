@@ -44,6 +44,8 @@ object Reloader {
           get(rl, f).foreach(s=> f.set(rl, s.toBoolean))
         case s: RunState =>
           get(rl, f).foreach(s=> f.set(rl, getStaticObj(s)))
+        case char: BaseChar =>
+          get(rl, f).foreach(s=> f.set(rl, Player.chars(s)))
         case _ =>
           Profile.error(s"${f.getName} is unsupported @reload class: ${t.getClass}!")
       }
@@ -73,6 +75,8 @@ object Reloader {
           put(rl, f, b.toString)
         case s: RunState =>
           put(rl, f, s.getClass.getName)
+        case char: BaseChar =>
+          put(rl, f, char.name)
         case _ =>
           Profile.error(s"${f.getName} is unsupported @reload class: ${t.getClass}!")
       }

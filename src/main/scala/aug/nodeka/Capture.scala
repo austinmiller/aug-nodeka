@@ -2,7 +2,6 @@ package aug.nodeka
 
 import java.util.regex.Pattern
 
-
 object Capture {
   val patterns: List[Pattern] = List(
     "^\\[ .* \\]: '.*'$",
@@ -13,7 +12,7 @@ object Capture {
     "^.* says, '.*'$",
     "^< emote > .*$",
     "^< social > .*$",
-    "^\\[ >>> .* <<<\\]$"
+    "^\\[ >>> .* <<< \\]$"
   ).map(Pattern.compile)
 
   def handle(line: String, withoutColors: String) : (Boolean, Boolean) = {

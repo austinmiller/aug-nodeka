@@ -22,8 +22,8 @@ object MobTracker extends Initable {
       .replaceAll(num, num) + "$"
   }
 
-  def write: Unit = {
-    val f = new File(Profile.getConfigDir, "mobStrings")
+  def write(): Unit = {
+    val f = new File(Profile.getClientDir, "mobStrings")
     TryWith(new FileOutputStream(f, true)) { fos =>
       regexes.map(toRegex).foreach { r=>
         val str = "MobTrigger(\"" + r + "\", \"\"),\n"
@@ -42,7 +42,7 @@ object MobTracker extends Initable {
       Alias.add("^mobs$", Profile.info(s"${regexes.size} mob strings"))
       Alias.add("^mobs clear$", regexes.clear)
       Alias.add("^mobs regexes$", regexes.map(toRegex).foreach(Profile.info))
-      Alias.add("^mobs write$", write)
+      Alias.add("^mobs write$", write())
     })
   }
 }

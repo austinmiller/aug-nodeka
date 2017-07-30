@@ -11,8 +11,10 @@ case class BaseChar(
                      keepNd: Int = 100
                    ) {
   def spellup() : Unit = {
-    spells.filter(sp => !Spells.isActive(sp) && Spells(sp).able).foreach(Spells.cast)
+    Profile.trace(s"$name is spelling up")
+    spells.filter(sp => !Spells.isActive(sp) && Spells(sp).get.able).foreach(Spells.cast)
   }
+
   def onRound() : Unit = {}
 }
 
@@ -53,12 +55,32 @@ object JibaChar extends BaseChar(
   }
 }
 
+object XiaomingChar extends BaseChar(
+  "xiaoming",
+  List(
+    "radical defiance"
+  ),
+  List(
+    "trip",
+    "kick",
+    "striking fist",
+    "yikwon hand form"
+  )
+) {
+  import Player._
+
+  override def spellup(): Unit = {
+    super.spellup()
+    if (sp > 400 && nd < 250) Spells.cast("invigorate")
+  }
+}
+
 object DefaultChar extends BaseChar("default")
 
 object Player extends Initable {
-  private val chars = List(DefaultChar, JibaChar).map(c=>c.name -> c).toMap
+  val chars = List(DefaultChar, JibaChar, XiaomingChar).map(c=>c.name -> c).toMap
 
-  var client : NodekaClient = null
+  var client : NodekaClient = _
 
   @Reload var mn = 0
   @Reload var hp = 0
@@ -68,7 +90,9 @@ object Player extends Initable {
   @Reload var xp = 0
   @Reload var lag = 0
   @Reload var level = 0
-  @Reload var name = "jiba"
+  @Reload var align = 0
+  @Reload var race = ""
+  @Reload var gameClass = ""
   @Reload var round = false
   @Reload var inCombat = false
   @Reload var enteredRoom = false
@@ -91,25 +115,26 @@ object Player extends Initable {
   @Reload var mwil = 0
   @Reload var mspe = 0
 
-  var char : BaseChar = DefaultChar
+  @Reload var char : BaseChar = DefaultChar
 
   def kill(target: String): Unit = {
     val found = char.attackSpells.exists {ap =>
-      val sp = Spells(ap)
-      if(sp.prev == "" || !Prevs.isActive(sp.prev)) {
-        if (sp.mn > 0 && mn > char.keepMn) {
-          Profile.send(s"cast '${sp.name}' $target")
-          true
-        } else if (sp.sp > 0 && this.sp > char.keepSp) {
-          Profile.send(s"invoke '${sp.name}' $target")
-          true
-        } else if (sp.nd > 0 && this.nd > char.keepSp) {
-          Profile.send(s"${sp.name} $target")
-          true
-        } else {
-          false
-        }
-      } else false
+      Spells(ap).exists { sp =>
+        if (sp.prev == "" || !Prevs.isActive(sp.prev)) {
+          if (sp.mn > 0 && mn > char.keepMn) {
+            Profile.send(s"cast '${sp.name}' $target")
+            true
+          } else if (sp.sp > 0 && this.sp > char.keepSp) {
+            Profile.send(s"invoke '${sp.name}' $target")
+            true
+          } else if (sp.nd > 0 && this.nd > char.keepSp) {
+            Profile.send(s"${sp.name} $target")
+            true
+          } else {
+            false
+          }
+        } else false
+      }
     }
 
     if (!found) {
@@ -117,52 +142,52 @@ object Player extends Initable {
     }
   }
 
-  def onCombat: Unit = {
-    if (!inCombat) onEnteringCombat
+  def onCombat(): Unit = {
+    if (!inCombat) onEnteringCombat()
   }
 
-  def onCombatPrompt: Unit = {
-    onCombat
+  def onCombatPrompt(): Unit = {
+    onCombat()
     if (round) {
       round = false
       char.onRound()
     }
   }
 
-  def onEnteringCombat: Unit = {
+  def onEnteringCombat(): Unit = {
     inCombat = true
   }
 
-  def onEnteringRoom: Unit = {
+  def onEnteringRoom(): Unit = {
     enteredRoom = false
     Run.onEnteringRoom
   }
 
-  def onKill: Unit = {
-    onCombat
+  def onKill(): Unit = {
+    onCombat()
   }
 
-  def onLeavingCombat: Unit = {
+  def onLeavingCombat(): Unit = {
     inCombat = false
     char.spellup()
     Run.onLeavingCombat
   }
 
-  def onPrompt: Unit = {
+  def onPrompt(): Unit = {
     if (inCombat) {
-      onLeavingCombat
+      onLeavingCombat()
     } else if (enteredRoom) {
-      onEnteringRoom
+      onEnteringRoom()
     }
   }
 
-  def reportString: String = {
+  private def reportString: String = {
     val max = mstr + mcon + mdex + magi + mint + mwis + mwil + mspe
     val base = str + con + dex + agi + int + wis + wil + spe
     s"level: $level stats: $max/$base"
   }
 
-  def sendStats(chan: String) = {
+  private def sendStats(chan: String) = {
     Profile.send(s"$chan " +
       s"str $mstr/$str dex $mdex/$dex " +
       s"agi $magi/$agi con $mcon/$con " +
@@ -171,8 +196,27 @@ object Player extends Initable {
       )
   }
 
+  private def setCharName(name: String): Unit = {
+    val correctChar = chars.getOrElse(name.toLowerCase, DefaultChar)
+
+    if (char.name != correctChar.name) {
+      char = correctChar
+      Spells.clear()
+      Prevs.clear()
+      Profile.info(s"loaded char $char")
+    }
+  }
+
   override def init(client: NodekaClient): Unit = {
-    char = chars(name) // might have been reloaded
+    Trigger.add("^\\[ ([A-Za-z]{2,30}) \\]: Welcome back to Nodeka and thank you for returning\\!$", (m: MatchResult) => {
+      setCharName(m.group(1).trim)
+    })
+
+    Trigger.add("^ *Name *([A-Z][a-z]{1,30}) *Cln *.*", (m: MatchResult) => {
+      val name = m.group(1).trim
+      Profile.trace(s"caught name $name")
+      setCharName(name)
+    })
 
     Trigger.addFrag("^-->> ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*)$", (m: MatchResult) => {
       hp = m.group(1).toInt
@@ -182,7 +226,7 @@ object Player extends Initable {
       gold = m.group(5).toInt
       lag = m.group(6).toInt
 
-      onPrompt
+      onPrompt()
     })
 
     Trigger.addFrag("^>-->> ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*) ([0-9]*)", (m: MatchResult) => {
@@ -193,11 +237,11 @@ object Player extends Initable {
       gold = m.group(5).toInt
       lag = m.group(6).toInt
 
-      onCombatPrompt
+      onCombatPrompt()
     })
 
     Trigger.add("^You receive ([0-9,]*) \\(\\+([0-9,]*) learn, \\+([0-9,]*) rp\\) exp\\.$", {
-      onKill
+      onKill()
     })
 
     Trigger.add("^You land \\[ [0-9]+ of [0-9]+ \\] attacks on (a|an) .*: .* damage(\\.|\\!+)$", round = true)
@@ -207,12 +251,46 @@ object Player extends Initable {
       enteredRoom = true
     })
 
+    Trigger.add("^   Race    (.*) Lvl      (.*)   Str ([ 0-9]*)/([ 0-9]*) Int  ([ 0-9]*)/([ 0-9]*)$", (m: MatchResult) => {
+      race = m.group(1).trim
+      level = m.group(2).trim.toInt
+      mstr = m.group(3).trim.toInt
+      str = m.group(4).trim.toInt
+      mint = m.group(5).trim.toInt
+      int = m.group(6).trim.toInt
+    })
+
+    Trigger.add("^   Class   (.*) Algn  (.*) Con  ([ 0-9]*)/([ 0-9]*) Wis ([ 0-9]*)/([ 0-9]*)$", (m: MatchResult) => {
+      gameClass = m.group(1).trim
+      align = m.group(2).trim.toInt
+      mcon = m.group(3).trim.toInt
+      con = m.group(4).trim.toInt
+      mwis = m.group(5).trim.toInt
+      wis = m.group(6).trim.toInt
+    })
+
+    Trigger.add("^   Cls 2 (.*) Gems (.*) Dex  ([ 0-9]*)/([ 0-9]*) Wil ([ 0-9]*)/([ 0-9]*)$", (m: MatchResult) => {
+      mdex = m.group(3).trim.toInt
+      dex = m.group(4).trim.toInt
+      mwil = m.group(5).trim.toInt
+      wil = m.group(6).trim.toInt
+    })
+
+    Trigger.add("^   Cls 3 (.*) Prcs ([ 0-9]*) Agi ([ 0-9]*)/([ 0-9]*) Spe ([ 0-9]*)/([ 0-9]*)$", (m: MatchResult) => {
+      magi = m.group(3).trim.toInt
+      agi = m.group(4).trim.toInt
+      mspe = m.group(5).trim.toInt
+      spe = m.group(6).trim.toInt
+      Profile.info(reportString)
+    })
+
     Alias.add("^info$", {
-      Profile.metric.echo(s"name: $name, hp: $hp, mn: $mn, sp: $sp, nd: $nd, gold: $gold, xp: $xp, lag: $lag, level: $level")
+      Profile.metric.echo(s"name: ${char.name}, hp: $hp, mn: $mn, sp: $sp, nd: $nd, gold: $gold, xp: $xp, lag: $lag, level: $level")
     })
 
     Alias.add("^sp$", char.spellup())
 
     Alias.add("^gi$", Profile.send(s"invoke 'greater invigoration'"))
+    Alias.add("^in$", Profile.send(s"invoke 'invigorate'"))
   }
 }
