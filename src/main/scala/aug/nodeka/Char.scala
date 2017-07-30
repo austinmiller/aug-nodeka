@@ -71,7 +71,8 @@ object XiaomingChar extends BaseChar(
 
   override def spellup(): Unit = {
     super.spellup()
-    if (sp > 400 && nd < 250) Spells.cast("invigorate")
+    if (sp > 400 && nd < 500) Spells.cast("invigorate")
+    if (sp > 400 && hp < 1000) Spells.cast("meditative healing")
   }
 }
 
@@ -210,6 +211,12 @@ object Player extends Initable {
   override def init(client: NodekaClient): Unit = {
     Trigger.add("^\\[ ([A-Za-z]{2,30}) \\]: Welcome back to Nodeka and thank you for returning\\!$", (m: MatchResult) => {
       setCharName(m.group(1).trim)
+    })
+
+    Trigger.add("^You have enough experience to level \\(type gain to increase in level\\)\\!$", {
+      if (level < 99) {
+        Profile.send("gain\nscore")
+      }
     })
 
     Trigger.add("^ *Name *([A-Z][a-z]{1,30}) *Cln *.*", (m: MatchResult) => {

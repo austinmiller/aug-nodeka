@@ -44,6 +44,7 @@ object Spells extends Initable {
     Spell("koloq", 238, 587, 0, "aura - oe grei"),
     Spell("lorhu's claymore", 0, 682, 0, "item creation - intermediate level"),
     Spell("magic arrow", 6, 9, 0, "magic arrow - basic level"),
+    Spell("meditative healing", 0, 40, 0, ""),
     Spell("mental blast", 0, 0, 17, "mental attack - basic level"),
     Spell("mental tempest", 0, 0, 56, "mental attack - intermediate level"),
     Spell("minor reign of speed", 100, 200, 0, ""),

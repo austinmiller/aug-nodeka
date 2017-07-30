@@ -12,7 +12,8 @@ object Capture {
     "^.* says, '.*'$",
     "^< emote > .*$",
     "^< social > .*$",
-    "^\\[ >>> .* <<< \\]$"
+    "^\\[ >>> .* <<< \\]$",
+    "^Increased mastery in your ability of .*$"
   ).map(Pattern.compile)
 
   def handle(line: String, withoutColors: String) : (Boolean, Boolean) = {

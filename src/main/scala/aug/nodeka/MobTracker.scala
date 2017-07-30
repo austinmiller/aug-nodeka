@@ -19,7 +19,7 @@ object MobTracker extends Initable {
       .replace("[", "\\\\[")
       .replace("]", "\\\\]")
       .replace(".", "\\\\.")
-      .replaceAll(num, num) + "$"
+      .replaceAll(num, "(" + num + ")") + "$"
   }
 
   def write(): Unit = {
@@ -30,7 +30,7 @@ object MobTracker extends Initable {
         fos.write(str.getBytes)
       }
     }
-    Profile.info("write mob string file")
+    Profile.info(s"wrote mob strings to ${f.getAbsolutePath}")
   }
 
   override def init(client: NodekaClient): Unit = {

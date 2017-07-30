@@ -2,7 +2,7 @@ package aug.nodeka
 
 import java.util.regex.MatchResult
 
-import aug.nodeka.area.{Amras, Vestil}
+import aug.nodeka.area._
 
 import scala.collection.mutable
 
@@ -24,7 +24,7 @@ case object Walking extends RunState
 
 object Run extends Initable {
 
-  val areas: Map[String, Area] = List(Vestil, Amras).map(a=> a.keyword -> a).toMap
+  val areas: Map[String, Area] = List(Vestil, Amras, Quad, Things).map(a=> a.keyword -> a).toMap
 
   @Reload private var targets = new mutable.Queue[String]()
   @Reload private var path = new mutable.Queue[String]()
@@ -56,7 +56,9 @@ object Run extends Initable {
   }
 
   private def next(): Unit = {
-    if (!paused) {
+    if (!paused && state != Stopped) {
+      Player.char.spellup()
+
       state match {
         case Walking => if (targets.nonEmpty) kill()
         case Running =>
@@ -75,7 +77,6 @@ object Run extends Initable {
 
         case _ =>
       }
-
     }
   }
 
@@ -141,7 +142,7 @@ object Run extends Initable {
 
     loadMobTriggers(area)
 
-    Profile.info(s"running $areaName with path $pathName")
+    Profile.info(s"running ${area.name} with path $pathName")
     Profile.send("look")
   }
 
@@ -161,8 +162,14 @@ object Run extends Initable {
     })
 
     Trigger.add("^There is no one here by that name\\.$", {
-      if (state == Running) {
+      if (state != Stopped) {
         next()
+      }
+    })
+
+    Trigger.add("^You lack the means to go there\\.$", {
+      if (state == Running && !paused) {
+        Profile.send(lastCmd)
       }
     })
 
