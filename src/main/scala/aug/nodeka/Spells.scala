@@ -6,14 +6,17 @@ import scala.collection.mutable
 
 case class Spell(name: String, mn: Int, sp: Int, nd: Int, prev: String) {
   def cast(target: String = "") : Unit = {
-    Profile.trace(s"casting $name")
-    if (prev == "" || !Prevs.isActive("prevs")) {
+    Profile.trace(s"casting $name sp: $sp/${Player.sp}, mn: $mn/${Player.mn}, nd: $nd/${Player.nd}")
+    if (prev == "" || !Prevs.isActive(prev)) {
+      Profile.trace(s"$name is not prevented")
       if (mn > 0 && Player.mn > mn + 100) {
         Profile.send(s"cast '$name' $target")
       } else if (sp > 0 && Player.sp > sp + 100) {
         Profile.send(s"invoke '$name' $target")
-      } else if (nd > 0 && Player.nd > sp + 100) {
+      } else if (nd > 0 && Player.nd > nd + 100) {
         Profile.send(s"$name $target")
+      } else {
+        Profile.trace(s"could not cast $name")
       }
     }
   }
@@ -35,6 +38,7 @@ object Spells extends Initable {
     Spell("flight", 50, 100, 0, ""),
     Spell("greater invigoration", 0, 100, 0, ""),
     Spell("haste", 50, 100, 0, ""),
+    Spell("invigorate", 0, 50, 0, ""),
     Spell("kick", 0, 0, 7, "kick - basic skill level"),
     Spell("keiiken", 0, 0, 57, "hand form - advanced skill"),
     Spell("koloq", 238, 587, 0, "aura - oe grei"),

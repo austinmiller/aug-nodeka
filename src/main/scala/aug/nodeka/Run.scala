@@ -26,37 +26,22 @@ object Run extends Initable {
 
   val areas: Map[String, Area] = List(Vestil, Amras).map(a=> a.keyword -> a).toMap
 
-  @Reload
-  private var targets = new mutable.Queue[String]()
-
-  @Reload
-  private var path = new mutable.Queue[String]()
-
-  @Reload
-  private var paused = false
-
-  @Reload
-  private var loop = true
-
-  @Reload
-  private var state : RunState = Stopped
-
-  @Reload
-  private var lastCmd : String = ""
-
-  @Reload
-  private var area : String = ""
-
-  @Reload
-  private var pathName : String = ""
+  @Reload private var targets = new mutable.Queue[String]()
+  @Reload private var path = new mutable.Queue[String]()
+  @Reload private var paused = false
+  @Reload private var loop = true
+  @Reload private var state : RunState = Stopped
+  @Reload private var lastCmd : String = ""
+  @Reload private var area : String = ""
+  @Reload private var pathName : String = ""
 
   private var mobTriggers : Option[List[Trigger]] = None
 
-  private def kill : Unit = {
+  private def kill(): Unit = {
     Player.kill(targets.dequeue)
   }
 
-  private def stop : Unit = {
+  private def stop(): Unit = {
     if (state == Stopped) {
       Profile.error(s"You are not running anything.")
     } else {
@@ -65,25 +50,27 @@ object Run extends Initable {
       paused = false
       mobTriggers.foreach(_.foreach(Trigger.remove))
       mobTriggers = None
+      Profile.info("Run is stopped.")
+      Stats.clear()
     }
   }
 
-  private def next : Unit = {
+  private def next(): Unit = {
     if (!paused) {
       state match {
-        case Walking => if (!targets.isEmpty) kill
+        case Walking => if (targets.nonEmpty) kill()
         case Running =>
-          if (!targets.isEmpty) {
-            kill
-          } else if (!path.isEmpty) {
+          if (targets.nonEmpty) {
+            kill()
+          } else if (path.nonEmpty) {
             lastCmd = path.dequeue
             Profile.execute(lastCmd)
           } else {
             if (loop) {
-              loadPath
+              loadPath()
               Profile.send("look")
               Profile.info("looping run")
-            } else stop
+            } else stop()
           }
 
         case _ =>
@@ -99,7 +86,7 @@ object Run extends Initable {
     addTarget(mobTrigger.keyword, count)
   }
 
-  def pause : Unit = {
+  def pause(): Unit = {
     if (paused) {
       Profile.error("run already paused")
     } else {
@@ -108,7 +95,7 @@ object Run extends Initable {
     }
   }
 
-  def resume : Unit = {
+  def resume(): Unit = {
     if (paused) {
       paused = false
       Profile.send("look")
@@ -122,12 +109,12 @@ object Run extends Initable {
     mobTriggers = Some(area.mobTriggers.map(mt => Trigger.add(mt.regex, handleMobTrigger(mt)(_))))
   }
 
-  private def loadPath : Unit = {
+  private def loadPath(): Unit = {
     path.clear()
     path ++= areas(area).paths(pathName)
   }
 
-  def clear: Unit = targets.clear
+  def clear(): Unit = targets.clear
 
   def run(areaName: String, pathName: String): Unit = {
     if (!areas.contains(areaName)) {
@@ -150,7 +137,7 @@ object Run extends Initable {
     this.area = areaName
     this.pathName = pathName
     state = Running
-    loadPath
+    loadPath()
 
     loadMobTriggers(area)
 
@@ -161,21 +148,21 @@ object Run extends Initable {
   def addTarget(target: String, count: Int = 1) = {
     for(i <- 1 to count) targets += target
   }
-  def onEnteringRoom : Unit = next
-  def onLeavingCombat : Unit = next
+  def onEnteringRoom() : Unit = next()
+  def onLeavingCombat() : Unit = next()
 
   override def init(client: NodekaClient): Unit = {
     areas.get(area).foreach(loadMobTriggers)
 
     Trigger.add("^They aren't here\\.$", {
       if (state == Running) {
-        next
+        next()
       }
     })
 
     Trigger.add("^There is no one here by that name\\.$", {
       if (state == Running) {
-        next
+        next()
       }
     })
 
@@ -183,9 +170,9 @@ object Run extends Initable {
       val n = m.group(1).split(" ")
       if (n.length >= 2) run(n(0), n(1)) else run(n(0), "default")
     })
-    Alias.add("^stop$", stop)
+    Alias.add("^stop$", stop())
     Alias.add("^targets$", Profile.info(s"run targets: $targets"))
-    Alias.add("^pause$", pause)
-    Alias.add("^resume$", resume)
+    Alias.add("^pause$", pause())
+    Alias.add("^resume$", resume())
   }
 }

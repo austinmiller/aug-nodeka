@@ -38,6 +38,8 @@ object Reloader {
           get(rl, f).foreach(s=> f.set(rl, ListBuffer[String](s.split("#"):_*)))
         case i: Integer =>
           get(rl, f).foreach(s=> f.set(rl, s.toInt))
+        case l: java.lang.Long =>
+          get(rl, f).foreach(s=> f.set(rl, s.toLong))
         case s: String =>
           get(rl, f).foreach(s=> f.set(rl, s))
         case b: java.lang.Boolean =>
@@ -69,6 +71,8 @@ object Reloader {
           put(rl, f, l.map(_.toString).mkString("#"))
         case i: Integer =>
           put(rl, f, i.toString)
+        case l: java.lang.Long =>
+          put(rl, f, l.toString)
         case s: String =>
           put(rl, f, s)
         case b: java.lang.Boolean =>

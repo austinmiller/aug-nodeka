@@ -29,6 +29,7 @@ object TryWith {
 object Util {
   def removeColors(string: String): String = string.replaceAll("\u001B\\[.*?m", "")
   def removeEscape(string: String): String = string.replaceAll("\u001B", "")
+  def stripCommas(string: String): String = string.replaceAll(",", "")
   def cc(codes: Int*) = Pattern.quote("" + 27.toByte.toChar + "[" + codes.mkString(";") + "m")
   val num = "[1-9][0-9]{0,}"
   val ecl = Pattern.quote("!")

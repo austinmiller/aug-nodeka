@@ -54,7 +54,7 @@ object Profile extends ProfileInterface with Initable {
 
 class NodekaClient extends ClientInterface {
 
-  val classes = List(Profile, Trigger, Alias, Player, Spells, Prevs, Run, MobTracker)
+  val classes = List(Profile, Trigger, Alias, Player, Spells, Prevs, Run, MobTracker, Stats)
 
   Player.client = this
 

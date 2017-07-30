@@ -240,8 +240,29 @@ object Player extends Initable {
       onCombatPrompt()
     })
 
-    Trigger.add("^You receive ([0-9,]*) \\(\\+([0-9,]*) learn, \\+([0-9,]*) rp\\) exp\\.$", {
+    Trigger.add("^You receive ([0-9,]+) \\(\\+([0-9,]*) learn, \\+([0-9,]*) rp\\) exp out of ([0-9,]+) total exp\\.$",
+      (m: MatchResult) => {
       onKill()
+
+      val xp = Util.stripCommas(m.group(1)).toLong +
+        Util.stripCommas(m.group(2)).toLong +
+        Util.stripCommas(m.group(3)).toLong
+
+      Stats.addXp(xp)
+    })
+
+    Trigger.add("^You get a pile of ([0-9,]+) gold\\.(Your inventory is full\\.|)$", (m: MatchResult) => {
+      Stats.addGold(Util.stripCommas(m.group(1)).toLong)
+    })
+
+    Trigger.add("^You receive ([0-9,]*) \\(\\+([0-9,]*) learn, \\+([0-9,]*) rp\\) exp\\.$", (m: MatchResult) => {
+      onKill()
+
+      val xp = Util.stripCommas(m.group(1)).toLong +
+        Util.stripCommas(m.group(2)).toLong +
+        Util.stripCommas(m.group(3)).toLong
+
+      Stats.addXp(xp)
     })
 
     Trigger.add("^You land \\[ [0-9]+ of [0-9]+ \\] attacks on (a|an) .*: .* damage(\\.|\\!+)$", round = true)
