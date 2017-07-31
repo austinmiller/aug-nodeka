@@ -57,7 +57,6 @@ object Run extends Initable {
 
   private def next(): Unit = {
     if (!paused && state != Stopped) {
-      Player.char.spellup()
 
       state match {
         case Walking => if (targets.nonEmpty) kill()

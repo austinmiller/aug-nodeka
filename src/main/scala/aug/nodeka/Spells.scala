@@ -28,6 +28,7 @@ object Spells extends Initable {
 
   val spells = List(
     Spell("armor", 57, 114, 0, ""),
+    Spell("ashi barai kick", 0, 0, 134, "kick - intermediate skill level"),
     Spell("ataghan of inheritance", 0, 150, 0, "item creation - basic level"),
     Spell("bash", 0, 0, 23, "impairment - iah"),
     Spell("berserkers focus", 0, 0, 150, ""),
@@ -36,6 +37,7 @@ object Spells extends Initable {
     Spell("demonic affirmation", 157, 303, 0, ""),
     Spell("elemental malediction", 300, 300, 0, ""),
     Spell("flight", 50, 100, 0, ""),
+    Spell("globe of fluctuation", 0, 70, 0, ""),
     Spell("greater invigoration", 0, 100, 0, ""),
     Spell("haste", 50, 100, 0, ""),
     Spell("invigorate", 0, 50, 0, ""),
@@ -63,6 +65,7 @@ object Spells extends Initable {
     Spell("trip", 0, 0, 20, "trip - basic skill level"),
     Spell("valkyrie's agility", 0, 0, 100, ""),
     Spell("vehemence", 0, 0, 72, ""),
+    Spell("vicious fist", 0, 0, 42, ""),
     Spell("winged arc-bolt", 125, 233, 0, "mystical pattern - basic skill"),
     Spell("yikwon hand form", 0, 0, 150, "hand form - intermediate skill")
   ).map(s => s.name -> s).toMap
@@ -84,6 +87,10 @@ object Spells extends Initable {
 
   override def init(client: NodekaClient): Unit = {
     Alias.add("^active spells$", Profile.metric.echo(s"active spells: ${active}"))
+    Alias.add("^clear spells", {
+      active.clear
+      Profile.metric.echo(s"spells cleared")
+    })
 
     Trigger.add("^the ataghan of Jiba you carry withers into dust\\.$", {
       Profile.send("wear cogline, left wield")
@@ -149,6 +156,8 @@ object Spells extends Initable {
     Trigger.add("^The reigns of angelic spiritual strength are yours\\.$", on("reign of spirit"))
     Trigger.add("^You begin to radically defy time\\.$", on("radical defiance"))
     Trigger.add("^Time defial is already within you\\.$", on("radical defiance"))
+    Trigger.add("^Your body quivers as you rise off the ground in a bluish sphere\\.$", on("globe of fluctuation"))
+    Trigger.add("^You are already encompassed within the globe\\.$", on("globe of fluctuation"))
 
     Trigger.add("^You are no longer affected by: (.*)\\.$", (m: MatchResult) => {
       off(m.group(1))
@@ -213,5 +222,6 @@ object Prevs extends Initable {
     Trigger.add("^The ataghan is yours\\.$", on("item creation - basic level"))
     Trigger.add("^You can wrinkle time no more \\(see 'preventions' for more details\\)\\.$", on("the warlock wrinkle"))
     Trigger.add("^Your backfist .* (a|an) .*(\\.|\\Q!\\E+)$", on("hand form - intermediate skill"))
+    Trigger.add("^Your sweeping kick .* (a|an) .*(\\.|\\Q!\\E+)$", on("kick - intermediate skill level"))
   }
 }

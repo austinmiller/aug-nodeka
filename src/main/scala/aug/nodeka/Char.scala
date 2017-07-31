@@ -58,15 +58,18 @@ object JibaChar extends BaseChar(
 object XiaomingChar extends BaseChar(
   "xiaoming",
   List(
-    "radical defiance"
+    "radical defiance",
+    "globe of fluctuation"
   ),
   List(
     "trip",
     "kick",
     "striking fist",
-    "yikwon hand form"
-  )
-) {
+    "ashi barai kick",
+    "yikwon hand form",
+    "vicious fist"
+  ),
+  400, 400, 400) {
   import Player._
 
   override def spellup(): Unit = {
