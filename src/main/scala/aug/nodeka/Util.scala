@@ -33,4 +33,5 @@ object Util {
   def cc(codes: Int*) = Pattern.quote("" + 27.toByte.toChar + "[" + codes.mkString(";") + "m")
   val num = "[1-9][0-9]{0,}"
   val ecl = Pattern.quote("!")
+  val end = "$"
 }

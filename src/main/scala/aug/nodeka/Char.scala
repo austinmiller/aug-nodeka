@@ -51,6 +51,7 @@ object JibaChar extends BaseChar(
 
   override def spellup(): Unit = {
     super.spellup()
+    super.spellup()
     if (sp > 400 && nd < 250) Spells.cast("greater invigoration")
   }
 }
@@ -65,9 +66,11 @@ object XiaomingChar extends BaseChar(
     "trip",
     "kick",
     "striking fist",
-    "ashi barai kick",
-    "yikwon hand form",
-    "vicious fist"
+    "oblique pattern",
+    "keiiken",
+//    "ashi barai kick",
+    "yikwon hand form"
+//    "vicious fist"
   ),
   400, 400, 400) {
   import Player._
@@ -212,6 +215,7 @@ object Player extends Initable {
   }
 
   override def init(client: NodekaClient): Unit = {
+    import Util._
     Trigger.add("^\\[ ([A-Za-z]{2,30}) \\]: Welcome back to Nodeka and thank you for returning\\!$", (m: MatchResult) => {
       setCharName(m.group(1).trim)
     })
@@ -323,5 +327,9 @@ object Player extends Initable {
 
     Alias.add("^gi$", Profile.send(s"invoke 'greater invigoration'"))
     Alias.add("^in$", Profile.send(s"invoke 'invigorate'"))
+    Alias.add(s"^#($num) (.*)$$", (m: MatchResult) => {
+      val strings = for (i <- 1 to m.group(1).toInt) yield m.group(2)
+      Profile.send(strings.mkString("\n"))
+    })
   }
 }

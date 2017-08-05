@@ -24,7 +24,7 @@ case object Walking extends RunState
 
 object Run extends Initable {
 
-  val areas: Map[String, Area] = List(Vestil, Amras, Quad, Things).map(a=> a.keyword -> a).toMap
+  val areas: Map[String, Area] = List(Vestil, Amras, Quad, Things, Rats).map(a=> a.keyword -> a).toMap
 
   @Reload private var targets = new mutable.Queue[String]()
   @Reload private var path = new mutable.Queue[String]()
@@ -172,6 +172,10 @@ object Run extends Initable {
       }
     })
 
+    Trigger.add("^The closed (.*) block\\(s\\) your passage (.*)\\.$", (m: MatchResult) => {
+      Profile.send(s"open ${m.group(2)}.${m.group(1)}\n${m.group(2)}")
+    })
+
     Alias.add("^run (.*)$", (m: MatchResult) => {
       val n = m.group(1).split(" ")
       if (n.length >= 2) run(n(0), n(1)) else run(n(0), "default")
@@ -180,5 +184,9 @@ object Run extends Initable {
     Alias.add("^targets$", Profile.info(s"run targets: $targets"))
     Alias.add("^pause$", pause())
     Alias.add("^resume$", resume())
+    Alias.add("^path left$", {
+      Profile.info(path.toList.mkString(",").replace("\n", "\\n"))
+      Profile.info(s"path size: ${path.size}")
+    })
   }
 }
