@@ -26,19 +26,24 @@ case class Spell(name: String, mn: Int, sp: Int, nd: Int, prev: String) {
 
 object Spells extends Initable {
 
-  val spells = List(
+  val spells: Map[String, Spell] = List(
+    Spell("aikido", 0, 0, 2739, ""),
+    Spell("annulment stance", 0, 0, 221, "basic style - annulment"),
     Spell("armor", 57, 114, 0, ""),
     Spell("ashi barai kick", 0, 0, 134, "kick - intermediate skill level"),
     Spell("ataghan of inheritance", 0, 150, 0, "item creation - basic level"),
     Spell("bash", 0, 0, 23, "impairment - iah"),
     Spell("berserkers focus", 0, 0, 150, ""),
     Spell("concentrated attack", 0, 0, 130, ""),
+    Spell("continuum of combat", 0, 0, 319, ""),
     Spell("dark protection", 30, 60, 0, ""),
     Spell("demonic affirmation", 157, 303, 0, ""),
+    Spell("dragon stance", 0, 0, 2154, ""),
     Spell("elemental malediction", 300, 300, 0, ""),
     Spell("flight", 50, 100, 0, ""),
     Spell("globe of fluctuation", 0, 70, 0, ""),
     Spell("greater invigoration", 0, 100, 0, ""),
+    Spell("hao'tien stance", 0, 0, 1017, ""),
     Spell("haste", 50, 100, 0, ""),
     Spell("invigorate", 0, 50, 0, ""),
     Spell("kick", 0, 0, 7, "kick - basic skill level"),
@@ -46,6 +51,7 @@ object Spells extends Initable {
     Spell("koloq", 238, 587, 0, "aura - oe grei"),
     Spell("lorhu's claymore", 0, 682, 0, "item creation - intermediate level"),
     Spell("magic arrow", 6, 9, 0, "magic arrow - basic level"),
+    Spell("mantis stance", 0, 0, 114, "basic style - mantis"),
     Spell("meditative healing", 0, 40, 0, ""),
     Spell("mental blast", 0, 0, 17, "mental attack - basic level"),
     Spell("mental tempest", 0, 0, 56, "mental attack - intermediate level"),
@@ -60,8 +66,11 @@ object Spells extends Initable {
     Spell("reign of strength", 183, 382, 0, ""),
     Spell("sentinel dominance", 100, 200, 0, ""),
     Spell("shadow cast", 40, 40, 0, ""),
+    Spell("stance of symmetry", 0, 0, 3002, "balanced stance form"),
     Spell("star of the green flame", 54, 101, 0, "fire generation - basic skill"),
     Spell("striking fist", 0, 0, 31, "hand form - basic skill"),
+    Spell("stun", 0, 0, 30, ""),
+    Spell("temple touch", 0, 0, 98, ""),
     Spell("trip", 0, 0, 20, "trip - basic skill level"),
     Spell("valkyrie's agility", 0, 0, 100, ""),
     Spell("vehemence", 0, 0, 72, ""),
@@ -74,8 +83,8 @@ object Spells extends Initable {
   private val active = mutable.Set[String]()
 
   def clear(): Unit = active.clear
-  def cast(name: String) = spells.get(name).foreach(_.cast())
-  def isActive(name: String) = active.contains(name)
+  def cast(name: String): Unit = spells.get(name).foreach(_.cast())
+  def isActive(name: String): Boolean = active.contains(name)
   def on(name: String) : Unit = {
     val spell = spells(name)
     active.add(name)
@@ -83,10 +92,10 @@ object Spells extends Initable {
   }
   def off(name: String) : Unit = active.remove(name)
 
-  def apply(name: String) = spells.get(name)
+  def apply(name: String): Option[Spell] = spells.get(name)
 
   override def init(client: NodekaClient): Unit = {
-    Alias.add("^active spells$", Profile.metric.echo(s"active spells: ${active}"))
+    Alias.add("^active spells$", Profile.metric.echo(s"active spells: $active"))
     Alias.add("^clear spells", {
       active.clear
       Profile.metric.echo(s"spells cleared")
@@ -158,6 +167,8 @@ object Spells extends Initable {
     Trigger.add("^Time defial is already within you\\.$", on("radical defiance"))
     Trigger.add("^Your body quivers as you rise off the ground in a bluish sphere\\.$", on("globe of fluctuation"))
     Trigger.add("^You are already encompassed within the globe\\.$", on("globe of fluctuation"))
+    Trigger.add("^A shimmering field of annulment surrounds your body\\.$", on("annulment stance"))
+    Trigger.add("^You glow green as you take a mantis stance\\.$", on("mantis stance"))
 
     Trigger.add("^You are no longer affected by: (.*)\\.$", (m: MatchResult) => {
       off(m.group(1))
@@ -166,18 +177,17 @@ object Spells extends Initable {
 }
 
 object Prevs extends Initable {
-  import Util._
 
   @Reload
   private val active = mutable.Set[String]()
 
-  def isActive(name: String) = active.contains(name)
-  def on(name: String) = active.add(name)
-  def off(name: String) = active.remove(name)
+  def isActive(name: String): Boolean = active.contains(name)
+  def on(name: String): Boolean = active.add(name)
+  def off(name: String): Boolean = active.remove(name)
   def clear(): Unit = active.clear
 
   override def init(client: NodekaClient): Unit = {
-    Alias.add("^active prevs$", Profile.metric.echo(s"active prevs: ${active}"))
+    Alias.add("^active prevs$", Profile.metric.echo(s"active prevs: $active"))
     Alias.add("^clear prevs$", {
       active.clear
       Profile.metric.echo(s"prevs cleared")

@@ -24,7 +24,14 @@ case object Walking extends RunState
 
 object Run extends Initable {
 
-  val areas: Map[String, Area] = List(Vestil, Amras, Quad, Things, Rats).map(a=> a.keyword -> a).toMap
+  val areas: Map[String, Area] = List(
+    Vestil,
+    Amras,
+    Quad,
+    Things,
+    Rats,
+    Vunagi
+  ).map(a=> a.keyword -> a).toMap
 
   @Reload private var targets = new mutable.Queue[String]()
   @Reload private var path = new mutable.Queue[String]()
@@ -34,6 +41,7 @@ object Run extends Initable {
   @Reload private var lastCmd : String = ""
   @Reload private var area : String = ""
   @Reload private var pathName : String = ""
+  @Reload private var moving: Boolean = false
 
   private var mobTriggers : Option[List[Trigger]] = None
 
@@ -65,6 +73,7 @@ object Run extends Initable {
             kill()
           } else if (path.nonEmpty) {
             lastCmd = path.dequeue
+            moving = true
             Profile.execute(lastCmd)
           } else {
             if (loop) {
@@ -145,11 +154,18 @@ object Run extends Initable {
     Profile.send("look")
   }
 
-  def addTarget(target: String, count: Int = 1) = {
+  def addTarget(target: String, count: Int = 1): Unit = {
     for(i <- 1 to count) targets += target
   }
-  def onEnteringRoom() : Unit = next()
-  def onLeavingCombat() : Unit = next()
+  def onEnteringRoom() : Unit = {
+    moving = false
+    next()
+  }
+  def onLeavingCombat() : Unit = {
+    if (moving) {
+      Profile.send(lastCmd)
+    } else next()
+  }
 
   override def init(client: NodekaClient): Unit = {
     areas.get(area).foreach(loadMobTriggers)
@@ -189,4 +205,5 @@ object Run extends Initable {
       Profile.info(s"path size: ${path.size}")
     })
   }
+
 }

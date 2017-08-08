@@ -3,7 +3,7 @@ package aug.nodeka
 import java.io.File
 import java.util
 
-import aug.script.shared._
+import aug.script.framework._
 
 trait Initable {
   def init(client: NodekaClient) : Unit
@@ -66,6 +66,7 @@ class NodekaClient extends ClientInterface {
   // if first is true and latter is true, swallow current line
   val lineHandlers : List[(String, String) => (Boolean, Boolean)] = List[(String, String) => (Boolean, Boolean)](
     Capture.handle,
+    Repop.handle,
     Trigger.handle
   )
 

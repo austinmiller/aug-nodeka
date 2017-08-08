@@ -51,7 +51,6 @@ object JibaChar extends BaseChar(
 
   override def spellup(): Unit = {
     super.spellup()
-    super.spellup()
     if (sp > 400 && nd < 250) Spells.cast("greater invigoration")
   }
 }
@@ -60,7 +59,10 @@ object XiaomingChar extends BaseChar(
   "xiaoming",
   List(
     "radical defiance",
-    "globe of fluctuation"
+    "globe of fluctuation",
+    "stance of symmetry",
+    "annulment stance"
+//    "mantis stance"
   ),
   List(
     "trip",
@@ -68,7 +70,7 @@ object XiaomingChar extends BaseChar(
     "striking fist",
     "oblique pattern",
     "keiiken",
-//    "ashi barai kick",
+////    "ashi barai kick",
     "yikwon hand form"
 //    "vicious fist"
   ),
@@ -77,15 +79,15 @@ object XiaomingChar extends BaseChar(
 
   override def spellup(): Unit = {
     super.spellup()
-    if (sp > 400 && nd < 500) Spells.cast("invigorate")
-    if (sp > 400 && hp < 1000) Spells.cast("meditative healing")
+    if (sp > 400 && nd < 3500) Spells.cast("invigorate")
+    if (sp > 400 && hp < 5000) Spells.cast("meditative healing")
   }
 }
 
 object DefaultChar extends BaseChar("default")
 
 object Player extends Initable {
-  val chars = List(DefaultChar, JibaChar, XiaomingChar).map(c=>c.name -> c).toMap
+  val chars: Map[String, BaseChar] = List(DefaultChar, JibaChar, XiaomingChar).map(c=>c.name -> c).toMap
 
   var client : NodekaClient = _
 
@@ -167,7 +169,7 @@ object Player extends Initable {
 
   def onEnteringRoom(): Unit = {
     enteredRoom = false
-    Run.onEnteringRoom
+    Run.onEnteringRoom()
   }
 
   def onKill(): Unit = {
@@ -177,7 +179,7 @@ object Player extends Initable {
   def onLeavingCombat(): Unit = {
     inCombat = false
     char.spellup()
-    Run.onLeavingCombat
+    Run.onLeavingCombat()
   }
 
   def onPrompt(): Unit = {
@@ -194,7 +196,7 @@ object Player extends Initable {
     s"level: $level stats: $max/$base"
   }
 
-  private def sendStats(chan: String) = {
+  private def sendStats(chan: String): Unit = {
     Profile.send(s"$chan " +
       s"str $mstr/$str dex $mdex/$dex " +
       s"agi $magi/$agi con $mcon/$con " +
@@ -282,7 +284,7 @@ object Player extends Initable {
     Trigger.add("^You land \\[ [0-9]+ of [0-9]+ \\] attacks on (a|an) .*: .* damage(\\.|\\!+)$", round = true)
 
     Trigger.add(".* \\[ exits: .*\\]$", {
-      Run.clear
+      Run.clear()
       enteredRoom = true
     })
 

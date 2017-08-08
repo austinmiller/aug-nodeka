@@ -2,7 +2,7 @@ package aug.nodeka
 
 import java.lang.reflect.Field
 
-import aug.script.shared.ReloadData
+import aug.script.framework.ReloadData
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
