@@ -30,6 +30,7 @@ object Run extends Initable {
     Quad,
     Things,
     Rats,
+    Telg,
     Vunagi
   ).map(a=> a.keyword -> a).toMap
 
@@ -203,6 +204,17 @@ object Run extends Initable {
     Alias.add("^path left$", {
       Profile.info(path.toList.mkString(",").replace("\n", "\\n"))
       Profile.info(s"path size: ${path.size}")
+    })
+
+    Alias.add("^reverse$", {
+      Profile.com.echo(Telg.paths("default").reverse.map {
+        case "n" => "s"
+        case "w" => "e"
+        case "s" => "n"
+        case "e" => "w"
+        case "u" => "d"
+        case "d" => "u"
+      }.mkString(","))
     })
   }
 

@@ -333,5 +333,10 @@ object Player extends Initable {
       val strings = for (i <- 1 to m.group(1).toInt) yield m.group(2)
       Profile.send(strings.mkString("\n"))
     })
+
+    Alias.add("^unsplit$", {
+      import scala.collection.JavaConverters._
+      Profile.getWindowNames.asScala.map(Profile.getTextWindow).foreach(_.unsplit())
+    })
   }
 }
