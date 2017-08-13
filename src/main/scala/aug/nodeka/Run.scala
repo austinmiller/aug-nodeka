@@ -43,6 +43,7 @@ object Run extends Initable {
   @Reload private var area : String = ""
   @Reload private var pathName : String = ""
   @Reload private var moving: Boolean = false
+  @Reload private var lastNext: Long = 0
 
   private var mobTriggers : Option[List[Trigger]] = None
 
@@ -65,6 +66,7 @@ object Run extends Initable {
   }
 
   private def next(): Unit = {
+    lastNext = System.currentTimeMillis()
     if (!paused && state != Stopped) {
 
       state match {
@@ -216,6 +218,12 @@ object Run extends Initable {
         case "d" => "u"
       }.mkString(","))
     })
-  }
 
+    Profile.getScheduler(Array.empty).every(5000, 10000, () => {
+      if (System.currentTimeMillis() - lastNext > 10000) {
+        Profile.info("heartbeat next")
+        next()
+      }
+    })
+  }
 }

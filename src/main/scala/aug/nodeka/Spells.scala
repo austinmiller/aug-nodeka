@@ -64,6 +64,7 @@ object Spells extends Initable {
     Spell("reign of speed", 177, 372, 0, ""),
     Spell("reign of spirit", 511, 511, 0, "spirit power, basic"),
     Spell("reign of strength", 183, 382, 0, ""),
+    Spell("regalement", 40, 0, 0, ""),
     Spell("sentinel dominance", 100, 200, 0, ""),
     Spell("shadow cast", 40, 40, 0, ""),
     Spell("stance of symmetry", 0, 0, 3002, "balanced stance form"),
@@ -140,7 +141,7 @@ object Spells extends Initable {
     // hum of valkyrie's bastion
     //  Trigger.add("^Your humming invokes a bastion of resistance around you\\.$", on(""))
     //  Trigger.add("^You already have the valkyrie's bastion protecting you\\.$", on(""))
-    Trigger.add("^Your decrepit hands quiver from incantatory speed\\.$", on("haste"))
+    Trigger.add("^Your (mystical|decrepit|worn) hands quiver from incantatory speed\\.$", on("haste"))
     Trigger.add("^The incantatory haste already endows you\\.$", on("haste"))
     Trigger.add("^You cackle evilly as your magic brings life to a mindless deadite\\.$", on("demonic affirmation"))
     Trigger.add("^Your mind is not strong enough to control another\\.$", on("demonic affirmation"))
@@ -213,8 +214,8 @@ object Prevs extends Initable {
     Trigger.add("^With a tempest, you .* (a|an) .* with your mental warfare(\\Q!\\E+|\\.)$", on("mental attack - intermediate level"))
     Trigger.add("^With an unfocused tempest, you .* (a|an) .* with your mental warfare(\\Q!\\E+|\\.)$", on("mental attack - intermediate level"))
     Trigger.add("^Your mental tempest misses (a|an) .*\\Q!\\E$", on("mental attack - intermediate level"))
-    Trigger.add("^A black arrow discharges from your (mystical|decrepit) hands .* (a|an) .*(\\Q!\\E+|\\.)$", on("magic arrow - basic level"))
-    Trigger.add("^A black arrow, imperfectly aimed, discharges from your (mystical|decrepit) hands .* (a|an) .*(\\Q!\\E+|\\.)$", on("magic arrow - basic level"))
+    Trigger.add("^A black arrow discharges from your (mystical|decrepit|worn) hands .* (a|an) .*(\\Q!\\E+|\\.)$", on("magic arrow - basic level"))
+    Trigger.add("^A black arrow, imperfectly aimed, discharges from your (mystical|decrepit|worn) hands .* (a|an) .*(\\Q!\\E+|\\.)$", on("magic arrow - basic level"))
     Trigger.add("^Your arrow flies astray missing (a|an) .* ... nice shot archer man\\Q!\\E$", on("magic arrow - basic level"))
     Trigger.add("^Your green fire-star .* (a|an) .*(\\Q!\\E+|\\.)$", on("fire generation - basic skill"))
     Trigger.add("^You have run out of premonitions \\(see 'preventions' for more details\\)\\.$", on("clairvoyance"))

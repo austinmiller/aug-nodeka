@@ -50,6 +50,7 @@ object Profile extends ProfileInterface with Initable {
   override def connect(): Unit = profile.connect()
   override def printException(throwable: Throwable): Unit = profile.printException(throwable)
   override def clientStop(): Unit = clientStop()
+  override def getScheduler(runnableReloaders: Array[RunnableReloader[_ <: Runnable]]) = profile.getScheduler(runnableReloaders)
 }
 
 class NodekaClient extends ClientInterface {
@@ -106,13 +107,12 @@ class NodekaClient extends ClientInterface {
     Profile.info(s"script loaded in ${System.currentTimeMillis() - ms}")
   }
 
-  override def handleLine(lineNum: Long, line: String): Boolean = {
-    val withoutColors = Util.removeColors(line)
-    lineHandlers.view.map(_(line, withoutColors)).find(_._1).exists(_._2)
+  override def handleLine(lineEvent: LineEvent): Boolean = {
+    lineHandlers.view.map(_(lineEvent.raw, lineEvent.withoutColors)).find(_._1).exists(_._2)
   }
 
-  override def handleFragment(fragment: String): Unit = {
-    Trigger.handleFragment(Util.removeColors(fragment))
+  override def handleFragment(lineEvent: LineEvent): Unit = {
+    Trigger.handleFragment(lineEvent.withoutColors)
   }
 
   override def handleCommand(cmd: String): Boolean = Alias.handle(cmd)

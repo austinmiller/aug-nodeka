@@ -37,7 +37,7 @@ object Vestil extends Area {
     MobTrigger("^A lone vulture circles, searching for decaying scraps\\. $", "vulture"),
     MobTrigger("^A small black beetle burrows in the sand\\.$", "beetle"),
     MobTrigger("^A tanned traveler rests here, looking up from his seat on the sand\\.$", "traveler"),
-    MobTrigger("^A white light emanates from within this spirit\\.  $", "spirit"),
+//    MobTrigger("^A white light emanates from within this spirit\\.  $", "spirit"),
     MobTrigger("^These \\[ ([1-9][0-9]{0,}) \\] desert lizards run through the sand\\.$", "lizard"),
     MobTrigger("^These \\[ ([1-9][0-9]{0,}) \\] female lizards jostle their way across the desert\\. $", "lizard"),
     MobTrigger("^These \\[ ([1-9][0-9]{0,}) \\] hunters silently stalk their prey\\.$", "hunter"),

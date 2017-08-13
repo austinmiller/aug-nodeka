@@ -84,10 +84,34 @@ object XiaomingChar extends BaseChar(
   }
 }
 
+object MacabreChar extends BaseChar(
+  "macabre",
+  List(
+    "armor",
+    "flight",
+    "dark protection",
+    "haste",
+    "shadow cast",
+//    "nefarious shift",
+  ),
+  List(
+    "mental blast",
+    "magic arrow",
+  ),
+  200, 200, 200) {
+  import Player._
+
+  override def spellup(): Unit = {
+    super.spellup()
+    if (mn > 200 && nd < 550) Spells.cast("regalement")
+//    if (sp > 400 && hp < 5000) Spells.cast("meditative healing")
+  }
+}
+
 object DefaultChar extends BaseChar("default")
 
 object Player extends Initable {
-  val chars: Map[String, BaseChar] = List(DefaultChar, JibaChar, XiaomingChar).map(c=>c.name -> c).toMap
+  val chars: Map[String, BaseChar] = List(DefaultChar, JibaChar, XiaomingChar, MacabreChar).map(c=>c.name -> c).toMap
 
   var client : NodekaClient = _
 
@@ -319,6 +343,10 @@ object Player extends Initable {
       mspe = m.group(5).trim.toInt
       spe = m.group(6).trim.toInt
       Profile.info(reportString)
+    })
+
+    Trigger.add("^You land \\[ [0-9]+ of [0-9]+ \\] attacks on .*: .* damage(\\.|\\Q!\\E+)$", {
+      onEnteringCombat()
     })
 
     Alias.add("^info$", {
