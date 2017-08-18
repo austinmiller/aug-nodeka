@@ -245,7 +245,7 @@ object Player extends Initable {
   def speedwalk(string: String): Unit = {
     val list = List.newBuilder[String]
 
-    val pattern = Pattern.compile(s"^(${Util.num})(n|e|s|w|u|d)(.*)$")
+    val pattern = Pattern.compile(s"^(${Util.num})(n|e|s|w|u|d)(.*)$$")
 
     @tailrec
     def process(string: String): Unit = {
@@ -397,6 +397,12 @@ object Player extends Initable {
       Profile.send(strings.mkString("\n"))
     })
 
+    Alias.add("^glo$", Spells.cast("globe of fluctuation"))
+
+    Alias.add(s"^\\.telg$$", {
+      Profile.send("n\nn\nog")
+      speedwalk("2n13e28s12e6se4n3wnene")
+    })
     Alias.add(s"^\\.(.*)$$", (m: MatchResult) => speedwalk(m.group(1)))
 
     Alias.add("^unsplit$", {

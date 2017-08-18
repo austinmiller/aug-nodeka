@@ -4,6 +4,7 @@ import java.io.File
 import java.util
 
 import aug.script.framework._
+import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 trait Initable {
   def init(client: NodekaClient) : Unit
@@ -125,4 +126,6 @@ class NodekaClient extends ClientInterface {
     Profile.info(s"[$id] disconnected")
     Run.stop()
   }
+
+  override def initDB(mongoClient: MongoClient, mongoDatabase: MongoDatabase) = {}
 }
