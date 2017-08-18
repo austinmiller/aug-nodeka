@@ -1,5 +1,7 @@
 package aug.nodeka
 
+import java.util.regex.MatchResult
+
 object Stats extends Initable {
 
   @Reload private var gold: Long = 0
@@ -60,5 +62,9 @@ object Stats extends Initable {
   override def init(client: NodekaClient): Unit = {
     Alias.add("^stats clear$", clear())
     Alias.add("^stats info$", info())
+
+    Trigger.add("^Your share is ([0-9]+) coins\\.$", (m: MatchResult) => {
+      addGold(m.group(1).toLong)
+    })
   }
 }

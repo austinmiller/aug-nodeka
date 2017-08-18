@@ -1,6 +1,8 @@
 package aug.nodeka
 
-import java.util.regex.MatchResult
+import java.util.regex.{MatchResult, Pattern}
+
+import scala.annotation.tailrec
 
 case class BaseChar(
                      name: String,
@@ -240,6 +242,37 @@ object Player extends Initable {
     }
   }
 
+  def speedwalk(string: String): Unit = {
+    val list = List.newBuilder[String]
+
+    val pattern = Pattern.compile(s"^(${Util.num})(n|e|s|w|u|d)(.*)$")
+
+    @tailrec
+    def process(string: String): Unit = {
+      if (string.length > 0) {
+        val c = string.charAt(0)
+        c match {
+          case 'n' | 's' | 'e' | 'u' | 'd' | 'w' =>
+            list += c.toString
+            process(string.substring(1))
+
+          case _ =>
+            val m = pattern.matcher(string)
+            if (!m.matches()) {
+              Profile.error(s"couldn't process speedwalk substring: $string")
+            } else {
+              for (i <- 0 until m.group(1).toInt) list += m.group(2)
+              process(m.group(3))
+            }
+        }
+      }
+    }
+
+    process(string)
+
+    Profile.send(list.result().mkString("\n"))
+  }
+
   override def init(client: NodekaClient): Unit = {
     import Util._
     Trigger.add("^\\[ ([A-Za-z]{2,30}) \\]: Welcome back to Nodeka and thank you for returning\\!$", (m: MatchResult) => {
@@ -353,6 +386,8 @@ object Player extends Initable {
       Profile.metric.echo(s"name: ${char.name}, hp: $hp, mn: $mn, sp: $sp, nd: $nd, gold: $gold, xp: $xp, lag: $lag, level: $level")
     })
 
+    Alias.add("^ss (.*)$", (m: MatchResult) => sendStats(m.group(1)))
+
     Alias.add("^sp$", char.spellup())
 
     Alias.add("^gi$", Profile.send(s"invoke 'greater invigoration'"))
@@ -361,6 +396,8 @@ object Player extends Initable {
       val strings = for (i <- 1 to m.group(1).toInt) yield m.group(2)
       Profile.send(strings.mkString("\n"))
     })
+
+    Alias.add(s"^\\.(.*)$$", (m: MatchResult) => speedwalk(m.group(1)))
 
     Alias.add("^unsplit$", {
       import scala.collection.JavaConverters._

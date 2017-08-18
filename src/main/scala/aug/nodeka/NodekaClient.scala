@@ -121,5 +121,8 @@ class NodekaClient extends ClientInterface {
 
   override def onConnect(id: Long, url: String, port: Int): Unit = Profile.info(s"[$id] connected to $url:$port")
 
-  override def onDisconnect(id: Long): Unit = Profile.info(s"[$id] disconnected")
+  override def onDisconnect(id: Long): Unit = {
+    Profile.info(s"[$id] disconnected")
+    Run.stop()
+  }
 }

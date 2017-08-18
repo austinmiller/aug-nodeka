@@ -51,7 +51,7 @@ object Run extends Initable {
     Player.kill(targets.dequeue)
   }
 
-  private def stop(): Unit = {
+  def stop(): Unit = {
     if (state == Stopped) {
       Profile.error(s"You are not running anything.")
     } else {
@@ -195,6 +195,8 @@ object Run extends Initable {
       Profile.send(s"open ${m.group(2)}.${m.group(1)}\n${m.group(2)}")
     })
 
+    Trigger.add("^## YOU were just defeated in battle by .*$", stop())
+
     Alias.add("^run (.*)$", (m: MatchResult) => {
       val n = m.group(1).split(" ")
       if (n.length >= 2) run(n(0), n(1)) else run(n(0), "default")
@@ -221,8 +223,10 @@ object Run extends Initable {
 
     Profile.getScheduler(Array.empty).every(5000, 10000, () => {
       if (System.currentTimeMillis() - lastNext > 10000) {
-        Profile.info("heartbeat next")
-        next()
+        if (state == Running) {
+          Profile.info("heartbeat next")
+          next()
+        }
       }
     })
   }
