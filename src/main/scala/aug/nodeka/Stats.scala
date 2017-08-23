@@ -45,8 +45,7 @@ object Stats extends Initable {
     val kpm = kills / dur
     val txp = xp / 1000000.0
     val tp = gold / 20000.0
-    val s = f"xp: $txp%.1fM, plats: $tp%.1f, kills: $kills%d, " +
-      f"xpm: $xpm%.1fM, ppm: $ppm%.1f, kpm: $kpm%.1f, time: $dur%.1f m"
+    val s = f"[$dur%.1f] xp: ($txp%.1f, $xpm%.1f), p: ($tp%.1f, $ppm%.1f), k: ($kills%d, $kpm%.1f)"
     Profile.info(s)
   }
 

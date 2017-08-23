@@ -31,7 +31,8 @@ object Run extends Initable {
     Things,
     Rats,
     Telg,
-    Vunagi
+    Vunagi,
+    Loop
   ).map(a=> a.keyword -> a).toMap
 
   @Reload private var targets = new mutable.Queue[String]()
@@ -220,6 +221,8 @@ object Run extends Initable {
         case "d" => "u"
       }.mkString(","))
     })
+
+    lastNext = System.currentTimeMillis()
 
     Profile.getScheduler(Array.empty).every(5000, 10000, () => {
       if (System.currentTimeMillis() - lastNext > 10000) {

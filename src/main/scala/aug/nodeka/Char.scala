@@ -409,5 +409,9 @@ object Player extends Initable {
       import scala.collection.JavaConverters._
       Profile.getWindowNames.asScala.map(Profile.getTextWindow).foreach(_.unsplit())
     })
+
+    Alias.add("^set prompt$", {
+      Profile.send("prompt tnl> #x$R$icom>$y $o $t $R>$i-->> $h $s $m $e $g $L")
+    })
   }
 }
