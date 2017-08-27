@@ -3,6 +3,7 @@ package aug.nodeka
 import java.util.regex.MatchResult
 
 import aug.nodeka.area._
+import aug.script.framework.reload.{CaseObjectConverter, Reload}
 
 import scala.collection.mutable
 
@@ -21,6 +22,7 @@ case object Stopped extends RunState
 case object Running extends RunState
 case object Walking extends RunState
 
+object RunStateConverter extends CaseObjectConverter[RunState]
 
 object Run extends Initable {
 
@@ -31,8 +33,7 @@ object Run extends Initable {
     Things,
     Rats,
     Telg,
-    Vunagi,
-    Loop
+    Vunagi
   ).map(a=> a.keyword -> a).toMap
 
   @Reload private var targets = new mutable.Queue[String]()

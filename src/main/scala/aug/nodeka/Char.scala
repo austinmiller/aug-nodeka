@@ -2,6 +2,8 @@ package aug.nodeka
 
 import java.util.regex.{MatchResult, Pattern}
 
+import aug.script.framework.reload.{Converter, Reload}
+
 import scala.annotation.tailrec
 
 case class BaseChar(
@@ -72,11 +74,11 @@ object XiaomingChar extends BaseChar(
     "striking fist",
     "oblique pattern",
     "keiiken",
-////    "ashi barai kick",
-    "yikwon hand form"
-//    "vicious fist"
+    "ashi barai kick",
+    "yikwon hand form",
+    "vicious fist"
   ),
-  400, 400, 400) {
+  400, 400, 4000) {
   import Player._
 
   override def spellup(): Unit = {
@@ -93,12 +95,12 @@ object MacabreChar extends BaseChar(
     "flight",
     "dark protection",
     "haste",
-    "shadow cast",
+    "shadow cast"
 //    "nefarious shift",
   ),
   List(
     "mental blast",
-    "magic arrow",
+    "magic arrow"
   ),
   200, 200, 200) {
   import Player._
@@ -111,6 +113,11 @@ object MacabreChar extends BaseChar(
 }
 
 object DefaultChar extends BaseChar("default")
+
+object CharConverter extends Converter[BaseChar] {
+  override def convertToValue(string: String) = Player.chars(string)
+  override def convertToString(baseChar: BaseChar): String = baseChar.name
+}
 
 object Player extends Initable {
   val chars: Map[String, BaseChar] = List(DefaultChar, JibaChar, XiaomingChar, MacabreChar).map(c=>c.name -> c).toMap
@@ -162,7 +169,7 @@ object Player extends Initable {
           } else if (sp.sp > 0 && this.sp > char.keepSp) {
             Profile.send(s"invoke '${sp.name}' $target")
             true
-          } else if (sp.nd > 0 && this.nd > char.keepSp) {
+          } else if (sp.nd > 0 && this.nd > char.keepNd) {
             Profile.send(s"${sp.name} $target")
             true
           } else {

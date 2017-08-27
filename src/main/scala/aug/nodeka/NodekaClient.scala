@@ -4,6 +4,7 @@ import java.io.File
 import java.util
 
 import aug.script.framework._
+import aug.script.framework.reload.{Reload, Reloader}
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 trait Initable {
@@ -56,12 +57,13 @@ object Profile extends ProfileInterface with Initable {
 
 class NodekaClient extends ClientInterface {
 
-  val classes = List(Profile, Trigger, Alias, Player, Spells, Prevs, Run, MobTracker, Stats)
+  private val classes = List(Profile, Trigger, Alias, Player, Spells, Prevs, Run, MobTracker, Stats)
+  private val converters = List(CharConverter, RunStateConverter)
 
   Player.client = this
 
-  val prompt = new PromptCapture(this)
-  var clientDir : File = _
+  private val prompt = new PromptCapture(this)
+  private var clientDir : File = _
 
 
   // if first boolean is true, don't process further lineHandlers
@@ -74,7 +76,7 @@ class NodekaClient extends ClientInterface {
 
   override def shutdown(): ReloadData = {
     val rl = new ReloadData
-    Reloader.save(rl, classes)
+    Reloader.save(rl, classes, converters)
     rl
   }
 
@@ -101,7 +103,9 @@ class NodekaClient extends ClientInterface {
 
     Profile.setWindowGraph(graph)
 
-    Reloader.load(reloadData, classes)
+    val exceptions = Reloader.load(reloadData, classes, converters)
+    exceptions.foreach(Profile.printException)
+    Profile.info(s"exception size ${exceptions.length}")
 
     classes.foreach(_.init(this))
 

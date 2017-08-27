@@ -2,6 +2,8 @@ package aug.nodeka
 
 import java.util.regex.MatchResult
 
+import aug.script.framework.reload.Reload
+
 import scala.collection.mutable
 
 case class Spell(name: String, mn: Int, sp: Int, nd: Int, prev: String) {

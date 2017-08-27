@@ -2,6 +2,8 @@ package aug.nodeka
 
 import java.util.regex.MatchResult
 
+import aug.script.framework.reload.Reload
+
 object Stats extends Initable {
 
   @Reload private var gold: Long = 0
